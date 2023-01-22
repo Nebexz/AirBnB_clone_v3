@@ -154,8 +154,7 @@ EOF  all  create  destroy  help  quit  show  update
 No known bugs at this time. 
 
 ## Authors
-Ebenezer Eshetie - [Github](https://github.com/EbenGithub) / [Twitter](https://twitter.com/ebshh)  
-Jennifer Huang - [Github](https://github.com/jhuang10123) / [Twitter](https://twitter.com/earthtojhuang)
+Sinework negasi - [Github](https://github.com/Sineworknegasi) / [Tiktok](https://www.tiktok.com/@sinework_negasi)  
 
 Second part of Airbnb: Joann Vuong
 ## License

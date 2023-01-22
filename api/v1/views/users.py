@@ -1,57 +1,55 @@
 #!/usr/bin/python3
-"""
-    Flask route that returns json response
-"""
+""" user view """
 from api.v1.views import app_views
-from flask import abort, jsonify, request
-from models import storage, CNC
+from flask import jsonify, Blueprint, make_response, abort, request
+from models import storage
+from models.user import User
+from models.base_model import BaseModel
 
 
-@app_views.route('/users/', methods=['GET', 'POST'])
-def users():
-    """
-        users route that handles http requests with no ID given
-    """
-
-    if request.method == 'GET':
-        all_users = storage.all('User')
-        all_users = [obj.to_dict() for obj in all_users.values()]
-        return jsonify(all_users)
-
-    if request.method == 'POST':
-        req_json = request.get_json()
-        if req_json is None:
-            abort(400, 'Not a JSON')
-        if req_json.get('email') is None:
-            abort(400, 'Missing email')
-        if req_json.get('password') is None:
-            abort(400, 'Missing password')
-        User = CNC.get('User')
-        new_object = User(**req_json)
-        new_object.save()
-        return jsonify(new_object.to_dict()), 201
+@app_views.route('/users', methods=["GET", "POST"],
+                 strict_slashes=False)
+def get_all_users():
+    """ retrieves all user objects """
+    output = []
+    users = storage.all(User).values()
+    if request.method == "GET":
+        for user in users:
+            output.append(user.to_dict())
+        return (jsonify(output))
+    if request.method == "POST":
+        data = request.get_json()
+        if not request.is_json:
+            abort(400, description="Not a JSON")
+        if 'email' not in request.json:
+            abort(400, description="Missing email")
+        if 'password' not in request.json:
+            abort(400, description="Missing password")
+        user = User(**data)
+        user.save()
+        return (jsonify(user.to_dict()), 201)
 
 
-@app_views.route('/users/<user_id>', methods=['GET', 'DELETE', 'PUT'])
-def user_with_id(user_id=None):
-    """
-        users route that handles http requests with ID given
-    """
-    user_obj = storage.get('User', user_id)
-    if user_obj is None:
-        abort(404, 'Not found')
-
-    if request.method == 'GET':
-        return jsonify(user_obj.to_dict())
-
-    if request.method == 'DELETE':
-        user_obj.delete()
-        del user_obj
-        return jsonify({}), 200
-
-    if request.method == 'PUT':
-        req_json = request.get_json()
-        if req_json is None:
-            abort(400, 'Not a JSON')
-        user_obj.bm_update(req_json)
-        return jsonify(user_obj.to_dict()), 200
+@app_views.route('/users/<user_id>', methods=["GET", "PUT", "DELETE"],
+                 strict_slashes=False)
+def get_a_user(user_id):
+    """ retrieves one unique user object """
+    user = storage.get(User, user_id)
+    if user is None:
+        abort(404)
+    if request.method == "GET":
+        output = user.to_dict()
+        return (jsonify(output))
+    if request.method == "PUT":
+        data = request.get_json()
+        if not request.is_json:
+            abort(400, description="Not a JSON")
+        for key, value in data.items():
+            setattr(user, key, value)
+        user.save()
+        return (jsonify(user.to_dict()), 200)
+    if request.method == "DELETE":
+        storage.delete(user)
+        storage.save()
+        result = make_response(jsonify({}), 200)
+        return result
